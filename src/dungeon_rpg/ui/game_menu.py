@@ -1,18 +1,21 @@
-from dungeon_rpg.game_rules.character_creator import CharacterCreator
+from dungeon_rpg.entities.character_creator import CharacterCreator
+from dungeon_rpg.game_rules.game_controll import GameControll
+from dungeon_rpg.settings.settings import Settings
 
 class GameMenu:
     """
     Presents the available choices the player can take to control the game.
     """
     def __init__(self):
+        Settings.check_terminal_size()
         print("Welcome to Dungeon RPG!\n")
 
     def start_new_game(self):
         print("\nCreate your character!")
-        charcter_generator = CharacterCreator()
-        player = charcter_generator.player_character
-        print(repr(player))
-        # TODO: Character creation -> generate dungeon
+        character_generator = CharacterCreator()  
+        player = character_generator.create_dummy()
+        game_controll = GameControll(player)
+        game_controll.start_game()
 
     def load_game(self):
         print("Select saved game:\n")

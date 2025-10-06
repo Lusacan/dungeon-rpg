@@ -8,9 +8,10 @@ class CharacterCreator:
     This class is used to generate the player character
     """
     def __init__(self):
-        self.race = self.race_selector()
-        self.attributes = self.distribute_attribute_points()
-        self.player_character = self.create_player_character(self.attributes)
+        #self.race = self.race_selector()
+        #self.attributes = self.distribute_attribute_points()
+        #self.player_character = self.create_player_character(self.attributes)
+        pass
 
     def race_selector(self):
         def main(stdscr):
@@ -170,3 +171,16 @@ class CharacterCreator:
             return new_player
         
         return curses.wrapper(main)
+    
+    def create_dummy(self):
+        dummy_player = Player(18,
+                              18,
+                              18,
+                              18,
+                              18,
+                              18,
+                              10,
+                              "0",
+                              econst.Race.HUMAN.name.title(),
+                              "Feri")
+        return dummy_player

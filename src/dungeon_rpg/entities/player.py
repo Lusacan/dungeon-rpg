@@ -21,4 +21,5 @@ class Player(Entity):
     def __str__(self):
         return (f"HP: {self.health}/{self.max_health}, "
             f"PT: {self.pain_tolerance}/{self.max_pain_tolerance}, "
-            f"Attack: {self.melee_attack}, Defense: {self.melee_defense}")
+            f"Attack: {self.melee_attack}, Defense: {self.melee_defense}, "
+            f"Position: Y:{self.position_y} X:{self.position_x}")
