@@ -1,4 +1,3 @@
-import random
 class Combat():
     """
     Logic for attacks (melee, ranged) and wound system  
@@ -7,13 +6,7 @@ class Combat():
     def melee_attack(attacker, defender, attack_roll=None, damage_roll=None):
         attack_log = []
 
-        if attack_roll is None:
-            attack_roll = random.randint(1, 100)
-
-        if damage_roll is None:
-            damage_roll = random.randint(1, attacker.damage)
-
-        attack_log.append(f"{attacker.name} is attacking: {defender.name}. Attack roll: {attack_roll}")
+        attack_log.append(f"{attacker.id} is attacking: {defender.id}. Attack roll: {attack_roll}")
 
         hp_damage = 0
         pt_damage = 0
@@ -44,34 +37,34 @@ class Combat():
                 if defender.pain_tolerance == 0:
                     if defender.health <= hp_damage:
                         hp_damage = defender.health
-                    attack_log.append(f"Overwhelming strike! {defender.name} loses {hp_damage} health.")
+                    attack_log.append(f"Overwhelming strike! {defender.id} loses {hp_damage} health.")
                 elif pt_damage >= defender.pain_tolerance:
-                    attack_log.append(f"Overwhelming strike! {defender.name} loses {hp_damage} health and {defender.pain_tolerance} pain tolerance.")
+                    attack_log.append(f"Overwhelming strike! {defender.id} loses {hp_damage} health and {defender.pain_tolerance} pain tolerance.")
                 else:
-                    attack_log.append(f"Overwhelming strike! {defender.name} loses {hp_damage} health and {pt_damage} pain tolerance.")
+                    attack_log.append(f"Overwhelming strike! {defender.id} loses {hp_damage} health and {pt_damage} pain tolerance.")
                 defender.take_damage(hp_damage, pt_damage)
             elif attack_result > defense:
                 if defender.pain_tolerance == 0:
                     hp_damage += damage_roll
                     if defender.health <= hp_damage:
                         hp_damage = defender.health
-                    attack_log.append(f"Hit! {defender.name} loses {hp_damage} health.")
+                    attack_log.append(f"Hit! {defender.id} loses {hp_damage} health.")
                 elif defender.pain_tolerance < damage_roll:
                     hp_damage += damage_roll - defender.pain_tolerance
                     pt_damage = defender.pain_tolerance
-                    attack_log.append(f"Hit! {defender.name} loses {hp_damage} health and {pt_damage} pain tolerance.")
+                    attack_log.append(f"Hit! {defender.id} loses {hp_damage} health and {pt_damage} pain tolerance.")
                 else:
                     pt_damage += damage_roll
                     collateral_dmg = damage_roll // 5
                     hp_damage += collateral_dmg
                     if hp_damage > 0:
-                        attack_log.append(f"Hit! {defender.name} loses {hp_damage} health and {pt_damage} pain tolerance.")
+                        attack_log.append(f"Hit! {defender.id} loses {hp_damage} health and {pt_damage} pain tolerance.")
                     else:
-                        attack_log.append(f"Hit! {defender.name} loses {pt_damage} pain tolerance.")
+                        attack_log.append(f"Hit! {defender.id} loses {pt_damage} pain tolerance.")
                     if collateral_dmg > 0:
                         attack_log.append(f"Collateral damage: {collateral_dmg}")
                 defender.take_damage(hp_damage, pt_damage)
                 
         else:
-            attack_log.append(f"{attacker.name} fumbles the attack!")
+            attack_log.append(f"{attacker.id} fumbles the attack!")
         return attack_log

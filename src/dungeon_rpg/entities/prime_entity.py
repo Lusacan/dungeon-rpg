@@ -28,9 +28,6 @@ class Entity:
 
         self.damage = damage
 
-        self.position_x = 0
-        self.position_y = 0
-
     @property
     def health(self):
         return self._health
