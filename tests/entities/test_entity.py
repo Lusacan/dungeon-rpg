@@ -1,9 +1,9 @@
 import unittest
-from dungeon_rpg.entities import prime_entity
+from dungeon_rpg.entities import entity
 
 class EntityTest(unittest.TestCase):
     def test_entity_creation(self):
-        entity = prime_entity.Entity(10, 10, 10, 10, 10, 10, 4, "T")
+        entity = entity.Entity(10, 10, 10, 10, 10, 10, 4, "T")
 
          # Base stats
         self.assertEqual(entity.strength, 10)
@@ -26,7 +26,7 @@ class EntityTest(unittest.TestCase):
         self.assertEqual(entity.ranged_defense, 50)
 
     def test_take_damage(self):
-        entity = prime_entity.Entity(5, 5, 5, 5, 5, 5, 2, "T")
+        entity = entity.Entity(5, 5, 5, 5, 5, 5, 2, "T")
 
         entity.take_damage(1, 5)
         self.assertEqual(entity.health, 4)
