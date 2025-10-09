@@ -5,7 +5,7 @@ class Entity:
     """
     def __init__(self, strength: int, dexterity: int, endurance: int, 
                  intelligence: int, willpower:int, charisma: int, 
-                 damage: int, id: str):
+                 damage: int, id: str, name = ""):
         self.strength = strength
         self.dexterity = dexterity
         self.endurance = endurance
@@ -13,6 +13,7 @@ class Entity:
         self.willpower = willpower
         self.charisma = charisma
         self.id = id
+        self.name = name
 
         self.max_health = self.endurance
         self.health = self.max_health

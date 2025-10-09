@@ -26,12 +26,11 @@ class ActorGenerator:
                 pos_y = random.randint(0, dungeon.height - 1)
                 pos_x = random.randint(0, dungeon.width - 1)
 
-                if dungeon.grid[pos_y][pos_x] is None:
+                cell = dungeon.get_cell(pos_y, pos_x)
+                if not cell.isBlocking:
                     enemy.position_y = pos_y
                     enemy.position_x = pos_x
                     break
-                elif pos_x and pos_y == 0:
-                    continue
             
             dungeon.place_entity(enemy, enemy.position_y, enemy.position_x)
             actors.append(enemy)
