@@ -28,6 +28,8 @@ class GameControll:
 
             dungeon = self.dungeon_generator.generate_dungeon()
 
+            dungeon.place_entity(self.player, self.player.position_y, self.player.position_x)
+
             enemies = self.actor_generator.generate_actors(dungeon,
                                              econsts.EntityType.HUMANOID,
                                              econsts.Alignment.HOSTILE,
@@ -35,7 +37,6 @@ class GameControll:
 
             self.player.position_x = 0
             self.player.position_y = 0
-            dungeon.place_entity(self.player, self.player.position_y, self.player.position_x)
             
             show_stats = False
 
@@ -119,9 +120,9 @@ class GameControll:
     def check_neighboors(self, dungeon):
         py, px = self.player.position_y, self.player.position_x
         for dy, dx in mconsts.NEIGHBOR_CELLS:
-            actor = dungeon.get_cell(py + dy, px + dx)
-            if actor:
-                self.evaluate_actor(actor)
+            cell = dungeon.get_cell(py + dy, px + dx)
+            if cell and cell.entity:
+                self.evaluate_actor(cell.entity)
 
     def evaluate_actor(self, actor):
         name = actor.name

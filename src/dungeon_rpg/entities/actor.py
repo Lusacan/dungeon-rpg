@@ -11,10 +11,9 @@ class Actor(Entity):
                  willpower, charisma, damage, id, entity_type, alignment, name):
         super().__init__(strength, dexterity, endurance,
                          intelligence, willpower, charisma,
-                         damage, id)
+                         damage, id,name)
         self.entity_type = entity_type
         self.alignment = alignment
-        self.name = name
 
     def behavior(self, player, dungeon):
         movement_logic = MovementLogic(self, dungeon)

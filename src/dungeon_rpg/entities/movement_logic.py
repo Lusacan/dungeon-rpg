@@ -37,8 +37,7 @@ class MovementLogic:
         logging.debug(f"Entity: {self.entity.name} Y:{self.entity.position_y} X:{self.entity.position_x}")
 
         cell = self.dungeon.get_cell(new_y, new_x)
-
-        if cell:
+        if cell.entity:
             dy, dx = self.get_direction(new_y, new_x)
             direction = self.DIRECTIONS.get((dy, dx), "UNKNOWN") #If not moved there is no direction
             logging.debug(f"Direction result:{direction}")
@@ -52,16 +51,16 @@ class MovementLogic:
                 cell_left = self.dungeon.get_cell(new_y, new_x - 1)
                 cell_right = self.dungeon.get_cell(new_y, new_x + 1)
 
-                if cell_left and cell_right:
+                if cell_left and cell_right and cell_left.entity and cell_right.entity:
                     new_y, new_x = self.step_back(dy, dx)
 
                 if occupied_count_left > occupied_count_right:
-                    if not cell_right:
+                    if cell_right.entity is None:
                         new_x += 1
                     else:
                         new_x -= 1
                 elif occupied_count_left < occupied_count_right:
-                    if not cell_left:
+                    if cell_left.entity is None:
                         new_x -= 1
                     else:
                         new_x += 1
@@ -81,16 +80,16 @@ class MovementLogic:
                 cell_up = self.dungeon.get_cell(new_y - 1, new_x)
                 cell_down = self.dungeon.get_cell(new_y + 1, new_x)
 
-                if cell_up and cell_down:
+                if cell_up and cell_down and cell_up.entity and cell_down.entity:
                     new_y, new_x = self.step_back(dy, dx)
 
                 if occupied_count_up > occupied_count_down:
-                    if not occupied_count_down:
+                    if cell_down.entity is None:
                         new_y -= 1
                     else:
                         new_y += 1 
                 elif occupied_count_up < occupied_count_down:
-                    if not cell_up:
+                    if cell_up.entity is None:
                         new_y += 1  
                     else:
                         new_y -= 1
@@ -104,7 +103,7 @@ class MovementLogic:
               
         message = self.dungeon.move_entity(self.entity, new_y, new_x)
 
-        if not message:
+        if message is None:
             logging.debug(f"Entity moving to: {self.entity.name} Y:{new_y} X:{new_x}")
             self.entity.position_x = new_x
             self.entity.position_y = new_y
@@ -129,9 +128,8 @@ class MovementLogic:
             new_y += dy
             new_x += dx
             cell = self.dungeon.get_cell(new_y, new_x)
-            if cell:
-                if isinstance(cell, Entity):
-                    occupied_count += 1
+            if cell and cell.entity:
+                occupied_count += 1
             else:
                 break
         return occupied_count
@@ -156,8 +154,9 @@ class MovementLogic:
         stepback_y = self.entity.position_y + rdy
         stepback_x = self.entity.position_x + rdx
 
-        if not self.dungeon.get_cell(stepback_y, stepback_x):
-            logging.debug(f"{self.entity.name} steps back to ({stepback_y}, {stepback_x})")
+        cell = self.dungeon.get_cell(stepback_y, stepback_x)
+        if cell and not cell.entity:
+            logging.debug(f"{self.entity.name} steps back...")
             return stepback_y, stepback_x
         else:
             logging.debug("No space to step back, staying in place.")
