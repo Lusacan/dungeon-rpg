@@ -1,13 +1,16 @@
 import curses
 from functools import partial
 import dungeon_rpg.entities.constants as econsts 
+import dungeon_rpg.settings.constants as sconsts
 from dungeon_rpg.game_rules.combat import Combat
 from dungeon_rpg.ui.game_interface import GameInterface
+from dungeon_rpg.ui.game_interface import InterfaceSections
 from dungeon_rpg.map.dungeon_generator import DungeonGenerator
 import dungeon_rpg.map.constants as mconsts
 from dungeon_rpg.entities.actor_generator import ActorGenerator
 from dungeon_rpg.game_rules.action import Action
-from dungeon_rpg.settings.settings import Settings
+from dungeon_rpg.inventory_and_equipment.item import Item
+import dungeon_rpg.inventory_and_equipment.constants as iconsts
 
 class GameControll:
     def __init__(self, player):
@@ -37,40 +40,57 @@ class GameControll:
 
             self.player.position_x = 0
             self.player.position_y = 0
-            
-            show_stats = False
 
+            test_item1 = Item("Book of revelation", iconsts.ItemType.MISC, 0.0, 0.0, "It contains the secrets of the universe")
+            test_item2 = Item("Potion of health", iconsts.ItemType.CONSUMABLE, 0.1, 0.1, "Restore 5 healthpoint")
+            test_item3 = Item("First item", iconsts.ItemType.QUEST, 0.1, 0.1, "Marks the beginning of inventory")
+            test_item4 = Item("Last item", iconsts.ItemType.QUEST, 0.0, 0.0, "Marks the end of invenory")
+
+            self.player.pickup_item(test_item3)
+            i = 0
+            while i < 20:
+                self.player.pickup_item(test_item1)
+                self.player.pickup_item(test_item2)
+                i += 1
+            self.player.pickup_item(test_item4)
+            
             dng_dim = (dungeon.height, dungeon.width)
+
+            ie_sections = InterfaceSections()
 
             # Game loop
             while True:
                 stdscr.clear()
-                
-                inf_str = f"Welcome to the dungeon {self.player.name}! Defeat enemies and find the entrance to the next level.\nEsc - Menu, I - Stats, ↑/↓ ←/→ - Move"
-                if show_stats:  
-                    inf_str += f"\nPlayer stats: {self.player}"
-
-                log_msg = ""
 
                 dialog_msg = [f"{action.id}. {action.description}" for action in reversed(self.available_actions)]
 
-                player_loc = (self.player.position_y ,self.player.position_x)
-
-                GameInterface.draw_interface(stdscr, player_loc, enemies, dng_dim, inf_str, dialog_msg, self.log, self.log_cursor)
+                GameInterface.draw_interface(stdscr, ie_sections, self.player, enemies, dng_dim, dialog_msg, self.log, self.log_cursor)
 
                 key = stdscr.getch()
             
                 if key == 27:  # ESC
+                    ie_sections.reset_cursor()
                     break
                 elif key in (ord("i"), ord("I")):
-                    show_stats = not show_stats
+                    ie_sections.toggle_stats()
                 elif key == ord('-'):
                     if self.log_cursor < len(self.log) - 1:
                         self.log_cursor += 1
                 elif key == ord('+'):
                     if self.log_cursor > 0:
                         self.log_cursor -= 1
-                else:
+                elif key in (ord('p'), ord("P")):
+                    ie_sections.toggle_equipment()
+                elif key in (ord('o'), ord("O")):
+                    ie_sections.toggle_inventory()
+                elif key == curses.KEY_DOWN and ie_sections.show_inventory:
+                        max_cursor = max(0, len(self.player.inventory.items))
+                        ie_sections.inventory_cursor = min(ie_sections.inventory_cursor + 1, max_cursor - 1)
+                        ie_sections.cursor_traversing_forward = True
+                elif key == curses.KEY_UP and ie_sections.show_inventory:
+                        ie_sections.inventory_cursor = max(0, ie_sections.inventory_cursor - 1)
+                        ie_sections.cursor_traversing_forward = False
+                else: #TODO Only on player action. Currently any key ticks
                     self.tick(key, dungeon, enemies)
                 
                 self.available_actions.clear()

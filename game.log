@@ -1,0 +1,24 @@
+2025-10-31 09:27:57,142 [DEBUG] Entity: Goblin_1 Y:9 X:0
+2025-10-31 09:27:57,142 [DEBUG] Entity moving to: Goblin_1 Y:8 X:0
+2025-10-31 09:27:57,143 [DEBUG] None
+2025-10-31 09:27:57,143 [DEBUG] Entity: Goblin_2 Y:4 X:0
+2025-10-31 09:27:57,143 [DEBUG] Entity moving to: Goblin_2 Y:3 X:0
+2025-10-31 09:27:57,143 [DEBUG] None
+2025-10-31 09:27:57,143 [DEBUG] Entity: Goblin_3 Y:7 X:8
+2025-10-31 09:27:57,143 [DEBUG] Entity moving to: Goblin_3 Y:7 X:7
+2025-10-31 09:27:57,143 [DEBUG] None
+2025-10-31 09:27:57,143 [DEBUG] Entity: Goblin_4 Y:5 X:4
+2025-10-31 09:27:57,144 [DEBUG] Entity moving to: Goblin_4 Y:4 X:4
+2025-10-31 09:27:57,144 [DEBUG] None
+2025-10-31 09:27:57,766 [DEBUG] Entity: Goblin_1 Y:8 X:0
+2025-10-31 09:27:57,766 [DEBUG] Entity moving to: Goblin_1 Y:7 X:0
+2025-10-31 09:27:57,766 [DEBUG] None
+2025-10-31 09:27:57,766 [DEBUG] Entity: Goblin_2 Y:3 X:0
+2025-10-31 09:27:57,766 [DEBUG] Entity moving to: Goblin_2 Y:2 X:0
+2025-10-31 09:27:57,766 [DEBUG] None
+2025-10-31 09:27:57,766 [DEBUG] Entity: Goblin_3 Y:7 X:7
+2025-10-31 09:27:57,766 [DEBUG] Entity moving to: Goblin_3 Y:6 X:7
+2025-10-31 09:27:57,766 [DEBUG] None
+2025-10-31 09:27:57,766 [DEBUG] Entity: Goblin_4 Y:4 X:4
+2025-10-31 09:27:57,766 [DEBUG] Entity moving to: Goblin_4 Y:3 X:4
+2025-10-31 09:27:57,766 [DEBUG] None

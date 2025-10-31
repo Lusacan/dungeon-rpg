@@ -1,4 +1,7 @@
 from dungeon_rpg.entities.entity import Entity
+from dungeon_rpg.inventory_and_equipment.inventory import Inventory
+from dungeon_rpg.inventory_and_equipment.equipment import Equipment
+import dungeon_rpg.inventory_and_equipment.constants as ieconsts
 
 class Player(Entity):
     """
@@ -11,6 +14,26 @@ class Player(Entity):
                          damage, id)
         self.race = race
         self.name = name
+        self.inventory = Inventory(self.strength)
+        self.equipment = Equipment()
+
+    def equip(self, item):
+        item_in_slot = self.equipment.equip_item(item)
+        if item_in_slot:
+            self.inventory.add_item(item_in_slot)
+
+    def unequip(self, slot):
+        #TODO Provide slot from interface selection
+        item_in_slot = self.equipment.unequip_item(slot)
+        if item_in_slot:
+            self.inventory.add_item(item_in_slot)
+
+    def pickup_item(self, item):
+        self.inventory.add_item(item)
+
+    def drop_item(self, item):
+        self.inventory.remove_item(item)
+        return item
 
     def __repr__(self):
         return (f"Player(str={self.strength}, dex={self.dexterity}, end={self.endurance}, "

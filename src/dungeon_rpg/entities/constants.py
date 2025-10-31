@@ -43,6 +43,8 @@ class EntityType(Enum):
     UNDEAD = auto()
     ANIMAL = auto()
 
+entity_with_inventory = [EntityType.HUMANOID]
+
 class Alignment(Enum):
     # Cannot be attacked
     FRIENDLY = auto()
