@@ -1,3 +1,4 @@
+from enum import Enum, auto
 class Interface:
     WIDTH = 90
     BOX_SEPARATOR_DISTANCE = 1
@@ -22,11 +23,62 @@ class Symbols:
     PLAYER = "@"
 
 class Inventory:
-    columns = [
+    #Sum: 58
+    default_colum_names = [
         ("Name", 25),
         ("Type", 15),
         ("Weight", 9),
         ("Volume", 9),
     ]
 
+    weapon_column_names = [
+        ("Name", 25),
+        ("Type", 8),
+        ("Grip", 5),
+        ("Att", 5),
+        ("Def", 5),
+        ("Dmg", 5),
+        ("Spd", 5)
+    ]
+
+    armor_column_names = [
+        ("Name", 25),
+        ("Slot", 10),
+        ("DA", 5),
+        ("MR", 18)
+    ]
+
+    material_column_names = [
+        ("Name", 25),
+        ("Type", 8),
+        ("Quantity", 25)
+    ]
+
+    consumables_column_names = [
+        ("Name", 25),
+        ("Type", 8),
+        ("Quantity", 25)
+    ]
+
+    quest_column_names = [
+        ("Name", 25),
+        ("Type", 8),
+        ("Quest", 25)
+    ]
+
+    misc_column_names = [
+        ("Name", 25),
+        ("Type", 8),
+        ("Quantity", 25)
+    ]
+
     available_lines = 17
+
+class InventoryView(Enum):
+    DEFAULT = auto()
+    WEAPONS = auto()
+    ARMORS = auto()
+    CONSUMABLES = auto()
+    MATERIALS = auto()
+    QUESTS = auto()
+    MISCS = auto()

@@ -10,6 +10,12 @@ import dungeon_rpg.map.constants as mconsts
 from dungeon_rpg.entities.actor_generator import ActorGenerator
 from dungeon_rpg.game_rules.action import Action
 from dungeon_rpg.inventory_and_equipment.item import Item
+from dungeon_rpg.inventory_and_equipment.weapon import Weapon
+from dungeon_rpg.inventory_and_equipment.armor import Armor
+from dungeon_rpg.inventory_and_equipment.material import Material
+from dungeon_rpg.inventory_and_equipment.consumable import Consumable
+from dungeon_rpg.inventory_and_equipment.miscellaneous import Miscellaneous
+from dungeon_rpg.inventory_and_equipment.quest import Quest
 import dungeon_rpg.inventory_and_equipment.constants as iconsts
 
 class GameControll:
@@ -41,22 +47,74 @@ class GameControll:
             self.player.position_x = 0
             self.player.position_y = 0
 
-            test_item1 = Item("Book of revelation", iconsts.ItemType.MISC, 0.0, 0.0, "It contains the secrets of the universe")
-            test_item2 = Item("Potion of health", iconsts.ItemType.CONSUMABLE, 0.1, 0.1, "Restore 5 healthpoint")
-            test_item3 = Item("First item", iconsts.ItemType.QUEST, 0.1, 0.1, "Marks the beginning of inventory")
-            test_item4 = Item("Last item", iconsts.ItemType.QUEST, 0.0, 0.0, "Marks the end of invenory")
+            test_item_misc = Miscellaneous("Book of revelation",
+                                       iconsts.ItemType.MISC,
+                                       0.0,
+                                       0.0,
+                                       iconsts.MiscType.BOOK,
+                                       "It contains the secrets of the universe")
 
-            self.player.pickup_item(test_item3)
-            i = 0
-            while i < 20:
-                self.player.pickup_item(test_item1)
-                self.player.pickup_item(test_item2)
-                i += 1
-            self.player.pickup_item(test_item4)
+            test_item_consumable = Consumable("Potion of health",
+                                    iconsts.ItemType.CONSUMABLE,
+                                    0.1,
+                                    0.1,
+                                    iconsts.ConsumableType.POTION,
+                                    "Restores 5 healthpoints",
+                                    quantity=3)
+
+            test_item_quest_1 = Quest("First item",
+                                      iconsts.ItemType.QUEST,
+                                      0.0,
+                                      0.0,
+                                      "Development",
+                                      "Marks the beginning of inventory")
+
+            test_item_quest_2 = Quest("Last item",
+                                      iconsts.ItemType.QUEST,
+                                      0.0,
+                                      0.0,
+                                      "Development",
+                                      "Marks the end of invenory")
             
+            test_item_material = Material("Soraxium",
+                                          iconsts.ItemType.MATERIAL,
+                                          0.1,
+                                          0.1,
+                                          iconsts.MaterialType.METAL,
+                                          "Hardest metal")
+            
+            test_weapon = Weapon("The blade of test",
+                                 iconsts.ItemType.WEAPON,
+                                 1,
+                                 2,
+                                 25,
+                                 10,
+                                 20,
+                                 5,
+                                 iconsts.WeaponType.SWORD, iconsts.Handness.TWO_HANDED,
+                                 "The first weapon ever created in the game - Why so weak?")
+            
+            test_armor = Armor("Small test armour",
+                               iconsts.ItemType.ARMOR,
+                               3,
+                               1,
+                               3,
+                               2,
+                               iconsts.ArmorType.SHOULDER,
+                               "As big as a sword, but stretches like crazy.")
+
+            assert self.player.pickup_item(test_item_quest_1)
+            assert self.player.pickup_item(test_item_misc)
+            assert self.player.pickup_item(test_item_consumable)
+            assert self.player.pickup_item(test_weapon)
+            assert self.player.pickup_item(test_armor)
+            assert self.player.pickup_item(test_item_material)
+            assert self.player.pickup_item(test_item_quest_2)
+    
             dng_dim = (dungeon.height, dungeon.width)
 
             ie_sections = InterfaceSections()
+            ie_sections.view_size = max(0, len(self.player.inventory.items))
 
             # Game loop
             while True:
@@ -84,12 +142,14 @@ class GameControll:
                 elif key in (ord('o'), ord("O")):
                     ie_sections.toggle_inventory()
                 elif key == curses.KEY_DOWN and ie_sections.show_inventory:
-                        max_cursor = max(0, len(self.player.inventory.items))
-                        ie_sections.inventory_cursor = min(ie_sections.inventory_cursor + 1, max_cursor - 1)
-                        ie_sections.cursor_traversing_forward = True
+                    ie_sections.inventory_cursor = min(ie_sections.inventory_cursor + 1, ie_sections.view_size - 1)
+                    ie_sections.cursor_traversing_forward = True
                 elif key == curses.KEY_UP and ie_sections.show_inventory:
-                        ie_sections.inventory_cursor = max(0, ie_sections.inventory_cursor - 1)
-                        ie_sections.cursor_traversing_forward = False
+                    ie_sections.inventory_cursor = max(0, ie_sections.inventory_cursor - 1)
+                    ie_sections.cursor_traversing_forward = False
+                elif key in (ord('f'), ord('F')) and ie_sections.show_inventory:
+                     ie_sections.reset_cursor()
+                     ie_sections.switch_inventory_view()
                 else: #TODO Only on player action. Currently any key ticks
                     self.tick(key, dungeon, enemies)
                 

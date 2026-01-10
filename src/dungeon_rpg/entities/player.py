@@ -29,7 +29,7 @@ class Player(Entity):
             self.inventory.add_item(item_in_slot)
 
     def pickup_item(self, item):
-        self.inventory.add_item(item)
+        return self.inventory.add_item(item)
 
     def drop_item(self, item):
         self.inventory.remove_item(item)
