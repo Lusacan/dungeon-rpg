@@ -15,7 +15,7 @@ class Interface:
     EQUIPMENT_BOX_HEIGHT = DUNGEON_BOX_HEIGHT + DUNGEON_BOX_PADDING_HEIGHT
     EQUIPMENT_BOX_WIDTH = WIDTH - (WIDTH // 3) - BOX_SEPARATOR_DISTANCE
     DESCRIPTION_BOX_WIDTH = WIDTH - (WIDTH // 3 * 2)
-    LOG_BOX_HEIGHT = 7
+    LOG_BOX_HEIGHT = 10
     LOG_BOX_WIDTH = WIDTH
     HEIGHT = INFO_BOX_HEIGHT + DUNGEON_BOX_HEIGHT + LOG_BOX_HEIGHT
 
@@ -23,7 +23,7 @@ class Symbols:
     PLAYER = "@"
 
 class Inventory:
-    #Sum: 58
+    #Sum of width: 58
     default_colum_names = [
         ("Name", 25),
         ("Type", 15),
@@ -74,6 +74,26 @@ class Inventory:
 
     available_lines = 17
 
+class Equipment:
+    equipment_column_names = [
+        ("Slot", 29),
+        ("Item", 29)
+    ]
+
+    skill_column_names = [
+
+    ]
+
+    feat_column_names = [
+
+    ]
+
+    spell_column_names = [
+
+    ]
+
+    available_lines = 17
+
 class InventoryView(Enum):
     DEFAULT = auto()
     WEAPONS = auto()
@@ -82,3 +102,10 @@ class InventoryView(Enum):
     MATERIALS = auto()
     QUESTS = auto()
     MISCS = auto()
+
+class InventoryOrdering(Enum):
+    DEFAULT = auto()
+    NAME = auto()
+    TYPE = auto()
+    WEIGHT = auto()
+    VOLUME = auto()

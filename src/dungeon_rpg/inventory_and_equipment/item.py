@@ -12,11 +12,14 @@ class Item:
     ) -> None: 
         self.name = name
         self.item_type = item_type
-        self.weight = weight
-        self.volume = volume
+        self._weight = 0.0
+        self._volume = 0.0
         self.description = description
         self.stackable = stackable
         self.quantity = quantity
+
+        self.unit_weight = weight
+        self.unit_volume = volume
 
     @property
     def quantity(self) -> int:
@@ -33,6 +36,38 @@ class Item:
         self._quantity = value
     
     @property
+    def unit_weight(self) -> float:
+        return self._weight
+
+    @property
+    def weight(self) -> float:
+        return self._weight * self.quantity
+    
+    @unit_weight.setter
+    def unit_weight(self, value: float) -> None:
+        if not isinstance(value, (int, float)):
+            raise TypeError("weight must be a number")
+        if value < 0:
+            raise ValueError("weight must be >= 0")
+        self._weight = float(value)
+    
+    @property
+    def unit_volume(self) -> float:
+        return self._volume
+
+    @property
+    def volume(self) -> float:
+        return self._volume * self.quantity
+
+    @unit_volume.setter
+    def unit_volume(self, value: float) -> None:
+        if not isinstance(value, (int, float)):
+            raise TypeError("volume must be a number")
+        if value < 0:
+            raise ValueError("volume must be >= 0")
+        self._volume = float(value)
+    
+    @property
     def type_name(self):
         return iconsts.item_type_string.get(self.item_type, "Unknown")
     
@@ -43,12 +78,6 @@ class Item:
         return self.name
     
     def __repr__(self):
-        return(
-            f"Item(name={self.name!r}, "
-            f"type={self.type_name}, "
-            f"weight={self.weight}, "
-            f"volume={self.volume}, "
-            f"description={self.description!r}, "
-            f"stackable={self.stackable}, "
-            f"quantity={self.quantity})"
-        )
+        attrs = ", ".join(f"{k}={v!r}" for k, v in vars(self).items()
+        if not k.startswith("_"))
+        return f"{self.__class__.__name__}({attrs})"

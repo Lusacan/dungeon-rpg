@@ -22,12 +22,12 @@ class Entity:
         self.pain_tolerance = self.max_pain_tolerance
 
         self.initiative = self.dexterity + self.intelligence
-        self.melee_attack = self.strength + self.dexterity
-        self.melee_defense = 60 + self.dexterity
         self.ranged_attack = self.dexterity
         self.ranged_defense = 50
-
-        self.damage = damage
+        self.base_damage = damage
+        self.action_points = 10
+        #self.critical_modifier = 0
+        #self.focus = (self.willpower + slef.intelligence) / 2
 
         self.position_x = 0
         self.position_y = 0
@@ -47,6 +47,26 @@ class Entity:
     @pain_tolerance.setter
     def pain_tolerance(self, value):
         self._pain_tolerance = max(0, min(value, self.max_pain_tolerance))
+
+    @property
+    def melee_attack(self):
+        return self.strength + self.dexterity
+    
+    @property
+    def melee_defense(self):
+        return 60 + self.dexterity
+    
+    @property
+    def base_damage(self):
+        return self._damage
+    
+    @base_damage.setter
+    def base_damage(self, value):
+        self._damage = value
+
+    @property
+    def damage(self):
+        return self.base_damage + + max(0, self.strength - 15)
 
     def take_damage(self, dmg_hp: int, dmg_pt: int):
         # Health damage

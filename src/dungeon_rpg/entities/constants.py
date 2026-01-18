@@ -52,3 +52,9 @@ class Alignment(Enum):
     HOSTILE = auto()
     # Attacks only when attacked
     NEUTRAL = auto()
+
+stat_groups = [
+        ("Attributes", ["strength", "dexterity", "endurance", "intelligence", "willpower", "charisma"]),
+        ("Health & Pain", ["health", "pain_tolerance"]),
+        ("Combat", ["initiative", "melee_attack", "melee_defense", "ranged_attack", "ranged_defense"])
+        ]

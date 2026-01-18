@@ -101,14 +101,32 @@ material_type_string = {
 class EquipmentSlot(Enum):
     HEAD = auto()
     SHOULDER = auto()
-    TORSO = auto()
-    BRACE = auto()
+    CHEST = auto()
+    WRIST = auto()
     FEET = auto()
     LEGS = auto()
     HANDS = auto()
+    WAIST = auto()
     LEFT_HAND = auto()
     RIGHT_HAND = auto()
     QUIVER = auto()
+
+equipment_slot_string = {
+    EquipmentSlot.HEAD: "Head",
+    EquipmentSlot.SHOULDER: "Shoulders",
+    EquipmentSlot.CHEST: "Chest",
+    EquipmentSlot.WRIST: "Wrists",
+    EquipmentSlot.FEET: "Feet",
+    EquipmentSlot.LEGS: "Legs",
+    EquipmentSlot.HANDS: "Hands",
+    EquipmentSlot.WAIST: "Waist",
+    EquipmentSlot.LEFT_HAND: "Left Hand",
+    EquipmentSlot.RIGHT_HAND: "Right Hand",
+    EquipmentSlot.QUIVER: "Quiver",
+}
+
+EMPTY_SLOT = "Empty"
+OCCUPIED = "Occupied"
 
 class Handness(Enum):
     ONE_HANDED = auto()

@@ -1,11 +1,15 @@
 import curses
 import textwrap
 import logging
+from typing import Optional
 from dataclasses import dataclass
 import dungeon_rpg.settings.constants as sconsts
 import dungeon_rpg.inventory_and_equipment.constants as iconsts
 from dungeon_rpg.ui.messages import UIMessages
 from dungeon_rpg.entities.player import Player
+import dungeon_rpg.entities.constants as econsts
+from dungeon_rpg.inventory_and_equipment.item import Item
+from dungeon_rpg.inventory_and_equipment.equipment_slot import Slot
 
 logging.basicConfig(
     filename="interface.log",          # file to write logs
@@ -23,7 +27,8 @@ class InterfaceSections:
     show_logbox : bool = True
     show_equipment : bool = False
     show_inventory : bool = False
-    inventory_view = sconsts.InventoryView.DEFAULT
+    inventory_view : sconsts.InventoryView = sconsts.InventoryView.DEFAULT
+    inventory_ordering = sconsts.InventoryOrdering = sconsts.InventoryOrdering.DEFAULT
     view_size : int = 0
 
     inventory_cursor = 0
@@ -32,7 +37,7 @@ class InterfaceSections:
     def toggle_inventory(self):
         if self.show_equipment:
             self.toggle_equipment()
-        #self.inventory_cursor = 0
+        self.inventory_cursor = 0
         self.show_inventory = not self.show_inventory
         self.show_dialogbox = not self.show_dialogbox
         self.show_dungeonbox = not self.show_dungeonbox
@@ -40,6 +45,7 @@ class InterfaceSections:
     def toggle_equipment(self):
         if self.show_inventory:
             self.toggle_inventory()
+        self.inventory_cursor = 0
         self.show_equipment = not self.show_equipment
         self.show_dialogbox = not self.show_dialogbox
         self.show_dungeonbox = not self.show_dungeonbox
@@ -58,6 +64,10 @@ class InterfaceSections:
         self.inventory_view = views[next_index]
         self.reset_cursor()
 
+@dataclass
+class InterfaceSelections:
+    selected_item: Optional[Item] = None
+    slot_to_unequip: Optional[Slot] = None
 
 @dataclass
 class BoxLayout:
@@ -85,6 +95,7 @@ class GameInterface:
     @staticmethod
     def draw_interface(stdscr,
                        ie_sections,
+                       ie_selections,
                        player,
                        enemies,
                        dng_dim,
@@ -137,14 +148,20 @@ class GameInterface:
             GameInterface.draw_dialog_box(stdscr, layout.dialog_box, dialog_context)
 
         if ie_sections.show_equipment:
-            GameInterface.draw_equipment_box(stdscr, layout.equipment_box, layout.player_stats_box, player)
+            GameInterface.draw_equipment_box(stdscr,
+                                             layout.equipment_box,
+                                             layout.player_stats_box,
+                                             player,
+                                             ie_sections,
+                                             ie_selections)
             
         if ie_sections.show_inventory:
             GameInterface.draw_inventory_box(stdscr,
                                              layout.inventory_box,
                                              layout.description_box,
                                              player,
-                                             ie_sections)
+                                             ie_sections,
+                                             ie_selections)
         
         if ie_sections.show_dungeonbox:
             GameInterface.draw_dungeon_box(stdscr,
@@ -168,6 +185,14 @@ class GameInterface:
 
         if ie_sections.show_inventory:
             inf_str = UIMessages.INVENTORY
+            max_size = player.inventory.max_capacity
+            curr_size = player.inventory.current_size
+            max_load = player.inventory.max_load
+            curr_load = player.inventory.current_weight
+            inf_str += f"\nCapacity: {curr_size}/{max_size}, Load: {curr_load}/{max_load}"
+
+        if ie_sections.show_equipment:
+            inf_str = UIMessages.EQUIPMENT
 
         return inf_str
         
@@ -212,7 +237,12 @@ class GameInterface:
                 break
             stdscr.addstr(layout.start_line + 1 + i, start_column, line)
 
-    def draw_equipment_box(stdscr, equip_layout: BoxLayout, stat_layout: BoxLayout, player):
+    def draw_equipment_box(stdscr,
+                           equip_layout: BoxLayout,
+                           stat_layout: BoxLayout,
+                           player: Player,
+                           ie_sections: InterfaceSections,
+                           ie_selections: InterfaceSelections):
         GameInterface.draw_box(stdscr,
                                equip_layout.start_line,
                                equip_layout.start_column,
@@ -220,18 +250,43 @@ class GameInterface:
                                equip_layout.width,
                                equip_layout.title)
         
+        columns = sconsts.Equipment.equipment_column_names
+
+        GameInterface.draw_equipment_table(stdscr, 
+                                           equip_layout.start_line + 1,
+                                           equip_layout.start_column + 1,
+                                           columns)
+        
+        GameInterface.fill_equipment_table(stdscr,
+                                           equip_layout.start_line + 2,
+                                           equip_layout.start_column + 1,
+                                           columns,  
+                                           player,
+                                           ie_sections,
+                                           ie_selections)
+        
         GameInterface.draw_box(stdscr,
                                stat_layout.start_line,
                                stat_layout.start_column,
                                stat_layout.height,
                                stat_layout.width,
                                stat_layout.title)
+        
+        player_statistics = GameInterface.generate_statistics(player)
+
+        GameInterface.draw_text_in_box(stdscr,
+                                       stat_layout.start_line,
+                                       stat_layout.start_column,
+                                       stat_layout.height,
+                                       stat_layout.width,
+                                       player_statistics)
 
     def draw_inventory_box(stdscr,
                            inv_layout: BoxLayout,
                            desc_layout: BoxLayout,
                            player: Player,
-                           ie_sections: InterfaceSections):
+                           ie_sections: InterfaceSections,
+                           ie_selections: InterfaceSelections):
         GameInterface.draw_box(stdscr,
                                inv_layout.start_line,
                                inv_layout.start_column,
@@ -263,7 +318,8 @@ class GameInterface:
                                            inv_layout.start_line + 2,
                                            inv_layout.start_column + 1,
                                            columns,
-                                           player, ie_sections)
+                                           player,
+                                           ie_sections)
         
         GameInterface.draw_box(stdscr,
                                desc_layout.start_line,
@@ -272,7 +328,11 @@ class GameInterface:
                                desc_layout.width,
                                desc_layout.title)
         
-        item_description = filtered_items[ie_sections.inventory_cursor].description
+        #if ie_sections.inventory_cursor >= len(filtered_items):
+         #   ie_sections.inventory_cursor = max(0, len(filtered_items) - 1)
+            
+        ie_selections.selected_item = filtered_items[ie_sections.inventory_cursor]
+        item_description = ie_selections.selected_item.description
 
         GameInterface.draw_text_in_box(stdscr,
                                        desc_layout.start_line,
@@ -371,7 +431,10 @@ class GameInterface:
         wrapped_lines = []
 
         for line in lines:
-            wrapped_lines.extend(textwrap.wrap(line, max_width))
+            if line == "EMPTY_LINE":
+                wrapped_lines.append("")  # insert a blank line
+            else:
+                wrapped_lines.extend(textwrap.wrap(line, max_width))
     
         for i, line in enumerate(wrapped_lines):
             # Make sure we don't write outside the box height
@@ -424,6 +487,92 @@ class GameInterface:
 
             current_x += width
 
+    def draw_equipment_table(stdscr, start_line, start_column, column_names):
+        current_x = start_column
+        
+        for i, (header, width) in enumerate(column_names):
+            centered_name = header.center(width - 1)
+
+            stdscr.addstr(start_line, current_x, centered_name)
+
+            if i < len(column_names) - 1:
+                for y in range(0, sconsts.Interface.EQUIPMENT_BOX_HEIGHT - 2):
+                    stdscr.addstr(start_line + y, current_x + width - 1, "|")
+
+            current_x += width
+
+    def fill_equipment_table(stdscr,
+                             start_line,
+                             start_column,
+                             columns,
+                             player: Player,
+                             ie_sections: InterfaceSections,
+                             ie_selections: InterfaceSelections):
+        armor_slots = list(player.equipment.armour_slots.values())
+        weapon_slots = list(player.equipment.weapon_slots.values())
+        all_slots = armor_slots + weapon_slots
+        row_y = start_line
+        visible_rows = sconsts.Inventory.available_lines
+        ie_sections.view_size = len(all_slots)
+
+        #If inventory cursor was reseted reset visible items too
+        if ie_sections.inventory_cursor == 0:
+            GameInterface.inventory_start_index = 0
+            GameInterface.inventory_end_index = min(ie_sections.view_size, visible_rows)
+
+        for i, slot in enumerate(all_slots):
+            current_x = start_column
+            global_index = GameInterface.inventory_start_index + i
+
+            if slot.occupied == True:
+                if slot.item:
+                    item_name = slot.item.name
+                else:
+                    item_name = iconsts.OCCUPIED
+            else:
+                item_name = iconsts.EMPTY_SLOT
+
+            item_in_slot = [slot.slot_name, item_name]
+
+            # Highlight if this line corresponds to the cursor’s item
+            if global_index == ie_sections.inventory_cursor:
+                attr = curses.A_REVERSE 
+                ie_selections.slot_to_unequip = slot
+            else:
+                attr = curses.A_NORMAL
+
+            for (header, width), value in zip(columns, item_in_slot):
+                if header == "Slot":
+                    text = value.ljust(width - 1)
+                else:
+                    text = value.center(width - 1)
+                    
+                stdscr.addstr(row_y, current_x, text, attr)
+                current_x += width
+
+            row_y += 1
+
+    def generate_statistics(player: Player) -> str:
+        lines = []
+
+        for group_name, attrs in econsts.stat_groups:
+            for attr in attrs:
+                value = getattr(player, attr)
+                # Special formatting for max values
+                if attr in ("health", "pain_tolerance"):
+                    max_attr = "max_" + attr
+                    max_value = getattr(player, max_attr)
+                    lines.append(f"{attr.replace('_', ' ').title()}: {value}/{max_value}")
+                else:
+                    lines.append(f"{attr.replace('_', ' ').title()}: {value}")
+            lines.append("EMPTY_LINE")  # insert an empty line between groups
+
+        # Remove the last empty line for a cleaner look
+        if lines and lines[-1] == "EMPTY_LINE":
+            lines.pop()
+
+        return "\n".join(lines)
+
     def filter_items(player: Player, ie_sections: InterfaceSections):
         """Return the items matching the current inventory view."""
         if ie_sections.inventory_view == sconsts.InventoryView.DEFAULT:
@@ -445,6 +594,23 @@ class GameInterface:
             return []  # fallback empty list
 
         return [item for item in player.inventory.items if item.item_type == filter_type]
+    
+    def order_by(ie_sections: InterfaceSections, items):
+        ordering = ie_sections.inventory_ordering
+
+        if ordering == sconsts.InventoryOrdering.NAME:
+            return sorted(items, key=lambda item: item.name)
+        
+        if ordering == sconsts.InventoryOrdering.TYPE:
+            return sorted(items, key=lambda item: item.type_name)
+        
+        if ordering == sconsts.InventoryOrdering.WEIGHT:
+            return sorted(items, key=lambda item: item.weight)
+        
+        if ordering == sconsts.InventoryOrdering.VOLUME:
+            return sorted(items, key=lambda item: item.volume)
+        
+        return items
 
     def fill_inventory_table(stdscr,
                              start_line,
@@ -456,12 +622,12 @@ class GameInterface:
         row_y = start_line
         visible_rows = sconsts.Inventory.available_lines
         items = GameInterface.filter_items(player, ie_sections)
-
-        logging.debug(f"Filtered Items: {items}")
-
+        items = GameInterface.order_by(ie_sections, items)
         ie_sections.view_size = len(items)
 
-        #TODO: Enable ordering by item properties
+        #TODO: Enable ordering by item properties on filters (weapon dmg, armor dr etc))
+        if ie_sections.inventory_cursor >= len(player.inventory.items):
+            ie_sections.inventory_cursor = max(0, len(player.inventory.items) - 1)
 
         #If inventory cursor was reseted reset visible items too
         if ie_sections.inventory_cursor == 0:
@@ -489,9 +655,6 @@ class GameInterface:
             GameInterface.inventory_start_index:GameInterface.inventory_end_index
         ]
 
-        logging.debug(f"Visible Items: {visible_items}")
-
-        values = []
         for i, item in enumerate(visible_items):
             current_x = start_column
             global_index = GameInterface.inventory_start_index + i
@@ -560,3 +723,12 @@ class GameInterface:
             row_y += 1
 
         return items
+    
+    def underscore_header(text: str, width: int) -> str:
+        text = f" {text} "
+        if len(text) >= width:
+            return text[:width]
+        padding = width - len(text)
+        left = padding // 2
+        right = padding - left
+        return "_" * left + text + "_" * right

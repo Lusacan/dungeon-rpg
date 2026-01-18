@@ -5,6 +5,7 @@ import dungeon_rpg.settings.constants as sconsts
 from dungeon_rpg.game_rules.combat import Combat
 from dungeon_rpg.ui.game_interface import GameInterface
 from dungeon_rpg.ui.game_interface import InterfaceSections
+from dungeon_rpg.ui.game_interface import InterfaceSelections
 from dungeon_rpg.map.dungeon_generator import DungeonGenerator
 import dungeon_rpg.map.constants as mconsts
 from dungeon_rpg.entities.actor_generator import ActorGenerator
@@ -17,12 +18,13 @@ from dungeon_rpg.inventory_and_equipment.consumable import Consumable
 from dungeon_rpg.inventory_and_equipment.miscellaneous import Miscellaneous
 from dungeon_rpg.inventory_and_equipment.quest import Quest
 import dungeon_rpg.inventory_and_equipment.constants as iconsts
+from dungeon_rpg.entities.player import Player
 
 class GameControll:
     def __init__(self, player):
         self.dungeon_generator = DungeonGenerator()
         self.actor_generator = ActorGenerator("EASY", 10)
-        self.player = player
+        self.player : Player = player
         self.log = []
         self.log_cursor = 0
         self.available_actions = []
@@ -87,8 +89,9 @@ class GameControll:
                                  iconsts.ItemType.WEAPON,
                                  1,
                                  2,
+                                 5,
                                  25,
-                                 10,
+                                 25,
                                  20,
                                  5,
                                  iconsts.WeaponType.SWORD, iconsts.Handness.TWO_HANDED,
@@ -114,6 +117,7 @@ class GameControll:
             dng_dim = (dungeon.height, dungeon.width)
 
             ie_sections = InterfaceSections()
+            ie_selections = InterfaceSelections()
             ie_sections.view_size = max(0, len(self.player.inventory.items))
 
             # Game loop
@@ -122,36 +126,13 @@ class GameControll:
 
                 dialog_msg = [f"{action.id}. {action.description}" for action in reversed(self.available_actions)]
 
-                GameInterface.draw_interface(stdscr, ie_sections, self.player, enemies, dng_dim, dialog_msg, self.log, self.log_cursor)
+                GameInterface.draw_interface(stdscr, ie_sections, ie_selections, self.player, enemies, dng_dim, dialog_msg, self.log, self.log_cursor)
 
                 key = stdscr.getch()
-            
-                if key == 27:  # ESC
-                    ie_sections.reset_cursor()
+                result = self.eval_key_input(key, ie_sections, ie_selections, dungeon, enemies)
+                
+                if result == 0:
                     break
-                elif key in (ord("i"), ord("I")):
-                    ie_sections.toggle_stats()
-                elif key == ord('-'):
-                    if self.log_cursor < len(self.log) - 1:
-                        self.log_cursor += 1
-                elif key == ord('+'):
-                    if self.log_cursor > 0:
-                        self.log_cursor -= 1
-                elif key in (ord('p'), ord("P")):
-                    ie_sections.toggle_equipment()
-                elif key in (ord('o'), ord("O")):
-                    ie_sections.toggle_inventory()
-                elif key == curses.KEY_DOWN and ie_sections.show_inventory:
-                    ie_sections.inventory_cursor = min(ie_sections.inventory_cursor + 1, ie_sections.view_size - 1)
-                    ie_sections.cursor_traversing_forward = True
-                elif key == curses.KEY_UP and ie_sections.show_inventory:
-                    ie_sections.inventory_cursor = max(0, ie_sections.inventory_cursor - 1)
-                    ie_sections.cursor_traversing_forward = False
-                elif key in (ord('f'), ord('F')) and ie_sections.show_inventory:
-                     ie_sections.reset_cursor()
-                     ie_sections.switch_inventory_view()
-                else: #TODO Only on player action. Currently any key ticks
-                    self.tick(key, dungeon, enemies)
                 
                 self.available_actions.clear()
                 dialog_msg.clear()
@@ -245,6 +226,8 @@ class GameControll:
                     for action in self.available_actions:
                         if action.id == action_id:
                             log_msg = action.execute()
+        else: 
+            return
 
         actor_logs = self.actor_management(enemies, dungeon)
 
@@ -265,3 +248,56 @@ class GameControll:
             GameInterface.draw_game_over(stdscr, go_text)
             stdscr.getch()
             return True
+        
+    def eval_key_input(self, 
+                       key,
+                       ie_sections : InterfaceSections,
+                       ie_selections : InterfaceSelections,
+                       dungeon,
+                       enemies) -> int:
+        if key == 27:  # ESC
+            ie_sections.reset_cursor()
+            return 0
+        elif key in (ord("i"), ord("I")):
+            ie_sections.toggle_stats()
+        elif key == ord('-'):
+            if self.log_cursor < len(self.log) - 1:
+                self.log_cursor += 1
+        elif key == ord('+'):
+            if self.log_cursor > 0:
+                self.log_cursor -= 1
+        elif key in (ord('p'), ord("P")):
+            ie_sections.toggle_equipment()
+        elif key in (ord('o'), ord("O")):
+            ie_sections.toggle_inventory()
+        elif ie_sections.show_inventory == True:
+            if key == curses.KEY_DOWN:
+                ie_sections.inventory_cursor = min(ie_sections.inventory_cursor + 1, ie_sections.view_size - 1)
+                ie_sections.cursor_traversing_forward = True
+            elif key == curses.KEY_UP:
+                ie_sections.inventory_cursor = max(0, ie_sections.inventory_cursor - 1)
+                ie_sections.cursor_traversing_forward = False
+            elif key in (ord('f'), ord('F')):
+                ie_sections.reset_cursor()
+                ie_sections.switch_inventory_view()
+            elif key in (ord('e'), ord('E')):
+                self.player.equip(ie_selections.selected_item)
+            elif key in (ord('n'), ord('N')):
+                ie_sections.inventory_ordering = sconsts.InventoryOrdering.NAME
+            elif key in (ord('w'), ord('W')):
+                ie_sections.inventory_ordering = sconsts.InventoryOrdering.WEIGHT
+            elif key in (ord('v'), ord('V')):
+                ie_sections.inventory_ordering = sconsts.InventoryOrdering.VOLUME
+            elif key in (ord('t'), ord('T')):
+                ie_sections.inventory_ordering = sconsts.InventoryOrdering.TYPE
+        elif ie_sections.show_equipment == True:
+            if key == curses.KEY_DOWN:
+                ie_sections.inventory_cursor = min(ie_sections.inventory_cursor + 1, ie_sections.view_size - 1)
+                ie_sections.cursor_traversing_forward = True
+            elif key == curses.KEY_UP:
+                ie_sections.inventory_cursor = max(0, ie_sections.inventory_cursor - 1)
+                ie_sections.cursor_traversing_forward = False
+            elif key in (ord('e'), ord('E')):
+                self.player.unequip(ie_selections.slot_to_unequip)
+        elif ie_sections.show_dungeonbox == True:
+            self.tick(key, dungeon, enemies)

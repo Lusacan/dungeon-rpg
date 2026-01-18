@@ -17,8 +17,8 @@ class Inventory:
 
     @property
     def current_weight(self) -> float:
-            return sum(
-        item.weight * getattr(item, "quantity", 1)
+        return sum(
+            item.weight * getattr(item, "quantity", 1)
             for item in self.items
         )
     

@@ -7,10 +7,11 @@ class Weapon(Item):
             item_type: iconsts.ItemType,
             weight: float,
             volume: float,
+            initiative : int,
             attack: int, 
             defense: int,
             damage: int,
-            speed: int,
+            action_cost: int,
             weapon_type: iconsts.WeaponType,
             handedness: iconsts.Handness,
             description: str = ""
@@ -22,12 +23,21 @@ class Weapon(Item):
             volume,
             description)
         
+        self.initiative = initiative
         self.attack = attack
         self.defense = defense
         self.damage = damage
-        self.speed = speed
+        self.action_cost = action_cost
         self.weapon_type = weapon_type
         self.handedness = handedness
+
+    def stat_bonuses(self):
+        return {
+            "initiative_from_weapon": self.initiative,
+            "melee_attack_from_weapon": self.attack,
+            "melee_defense_from_weapon": self.defense,
+            "damage_from_weapon": self.damage,
+        }
 
     @property
     def subtype_name(self):

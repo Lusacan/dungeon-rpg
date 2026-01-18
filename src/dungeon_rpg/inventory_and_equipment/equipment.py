@@ -1,16 +1,19 @@
 from dungeon_rpg.inventory_and_equipment.equipment_slot import Slot
 import dungeon_rpg.inventory_and_equipment.constants as ieconsts
+from dungeon_rpg.inventory_and_equipment.item import Item
+import logging
 
 class Equipment:
     def __init__(self):
         self.armour_slots = {
             ieconsts.EquipmentSlot.HEAD: Slot(ieconsts.EquipmentSlot.HEAD),
             ieconsts.EquipmentSlot.SHOULDER: Slot(ieconsts.EquipmentSlot.SHOULDER),
-            ieconsts.EquipmentSlot.TORSO: Slot(ieconsts.EquipmentSlot.TORSO),
-            ieconsts.EquipmentSlot.BRACE: Slot(ieconsts.EquipmentSlot.BRACE),
+            ieconsts.EquipmentSlot.CHEST: Slot(ieconsts.EquipmentSlot.CHEST),
+            ieconsts.EquipmentSlot.WRIST: Slot(ieconsts.EquipmentSlot.WRIST),
             ieconsts.EquipmentSlot.FEET: Slot(ieconsts.EquipmentSlot.FEET),
             ieconsts.EquipmentSlot.LEGS: Slot(ieconsts.EquipmentSlot.LEGS),
-            ieconsts.EquipmentSlot.HANDS: Slot(ieconsts.EquipmentSlot.HANDS)
+            ieconsts.EquipmentSlot.HANDS: Slot(ieconsts.EquipmentSlot.HANDS),
+            ieconsts.EquipmentSlot.WAIST: Slot(ieconsts.EquipmentSlot.WAIST)
         }
 
         self.weapon_slots = {
@@ -22,16 +25,17 @@ class Equipment:
         self.weight_sum = 0
 
     def equip_item(self, item):
-        itype = item.item_type
-        previous = None
-        if itype == ieconsts.ItemType.WEAPON:
+        if item.item_type == ieconsts.ItemType.WEAPON:
             previous = self.equip_weapon(item)
-        elif itype == ieconsts.ItemType.ARMOR:
+        elif item.item_type == ieconsts.ItemType.ARMOR:
             previous = self.equip_armor(item)
-        
-        self.weight_sum += item.weight
+        else:
+            raise ValueError("Item cannot be equipped")
+
         if previous:
             self.weight_sum -= previous.weight
+
+        self.weight_sum += item.weight
         return previous
 
     def equip_weapon(self, weapon):
@@ -47,7 +51,7 @@ class Equipment:
             previous = quiver_slot.item
             quiver_slot.equip(weapon)
         else:
-            lr_hand = weapon.handness
+            lr_hand = weapon.handedness
             if lr_hand == ieconsts.Handness.ONE_HANDED:
                 if weapon_slot_left.occupied:
                     previous = weapon_slot_right.item
@@ -70,9 +74,13 @@ class Equipment:
         return previous
         
     def unequip_item(self, slot):
-        to_inventory = None
-        if slot.item:
-            to_inventory = slot.item
-            self.weight_sum -= slot.item.weight
-            slot.unequip()
-        return to_inventory
+        if not slot or not slot.item:
+            return None
+
+        if (slot.item.item_type == ieconsts.ItemType.WEAPON and 
+            getattr(slot.item, "handedness", None) == ieconsts.Handness.TWO_HANDED):
+            self.weapon_slots[ieconsts.EquipmentSlot.RIGHT_HAND].unequip()
+
+        previous_item = slot.unequip()
+
+        return previous_item
